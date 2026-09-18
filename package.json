@@ -1,0 +1,17 @@
+{
+  "name": "shilpai",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "start:api": "npm run start --workspace=@shilpai/api",
+    "dev:api": "npm run dev --workspace=@shilpai/api",
+    "build:api": "npm run build --workspace=@shilpai/api",
+    "db:push": "npm run db:push --workspace=@shilpai/api",
+    "db:generate": "npm run db:generate --workspace=@shilpai/api"
+  }
+}
+

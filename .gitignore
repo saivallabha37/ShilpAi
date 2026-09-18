@@ -1,0 +1,22 @@
+node_modules/
+dist/
+build/
+.env
+.DS_Store
+coverage/
+*.log
+
+# Expo / React Native
+.expo/
+apps/mobile/.expo/
+apps/mobile/node_modules/
+
+# Python
+__pycache__/
+*.pyc
+venv/
+.venv/
+
+# DB
+*.sqlite
+*.sqlite-journal

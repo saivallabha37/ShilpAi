@@ -1,0 +1,240 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ARTISAN
+  BUYER
+  ADMIN
+}
+
+enum AccountStatus {
+  active
+  suspended
+  deleted
+}
+
+model User {
+  id                String             @id @default(uuid())
+  role              Role
+  status            AccountStatus      @default(active)
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+
+  artisanCredential ArtisanCredential?
+  buyerCredential   BuyerCredential?
+  artisanProfile    ArtisanProfile?
+  buyerProfile      BuyerProfile?
+  refreshTokens     RefreshToken[]
+  products          Product[]
+}
+
+model ArtisanCredential {
+  id              String    @id @default(uuid())
+  userId          String    @unique
+  user            User      @relation(fields: [userId], references: [id])
+  phoneNumber     String    @unique
+  phoneVerifiedAt DateTime?
+}
+
+model BuyerCredential {
+  id              String    @id @default(uuid())
+  userId          String    @unique
+  user            User      @relation(fields: [userId], references: [id])
+  email           String    @unique
+  passwordHash    String
+  emailVerifiedAt DateTime?
+}
+
+model OtpCode {
+  id          String   @id @default(uuid())
+  phoneNumber String
+  codeHash    String
+  attempts    Int      @default(0)
+  expiresAt   DateTime
+  createdAt   DateTime @default(now())
+
+  @@index([phoneNumber])
+}
+
+model RefreshToken {
+  id         String    @id @default(uuid())
+  userId     String
+  user       User      @relation(fields: [userId], references: [id])
+  tokenHash  String    @unique
+  expiresAt  DateTime
+  revokedAt  DateTime?
+  createdAt  DateTime  @default(now())
+}
+
+enum ProfileCompleteness {
+  incomplete
+  complete
+}
+
+model CraftCategory {
+  id       String           @id @default(uuid())
+  label    String           @unique
+  iconRef  String?
+  profiles ArtisanProfile[]
+  products Product[]
+}
+
+model ArtisanProfile {
+  id               String              @id @default(uuid())
+  userId           String              @unique
+  user             User                @relation(fields: [userId], references: [id])
+  name             String
+  craftCategoryId  String?
+  craftCategory    CraftCategory?      @relation(fields: [craftCategoryId], references: [id])
+  locationState    String?
+  locationDistrict String?
+  bio              String?
+  photoUrl         String?
+  completeness     ProfileCompleteness @default(incomplete)
+  createdAt        DateTime            @default(now())
+  updatedAt        DateTime            @updatedAt
+}
+
+model BuyerProfile {
+  id              String   @id @default(uuid())
+  userId          String   @unique
+  user            User     @relation(fields: [userId], references: [id])
+  organizationName String
+  contactName      String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  inquiries        Inquiry[]
+}
+
+enum ProductStatus {
+  draft
+  processing
+  ready_for_review
+  published
+  unpublished
+  archived
+}
+
+enum JobStatus {
+  pending
+  processing
+  done
+  failed
+}
+
+model Product {
+  id                  String         @id @default(uuid())
+  artisanId           String
+  artisan             User           @relation(fields: [artisanId], references: [id])
+  name                String
+  rawDescription      String?
+  categoryId          String?
+  category            CraftCategory? @relation(fields: [categoryId], references: [id])
+  materials           String?
+  productionTime      String?
+  quantityAvailable   Int?
+  
+  catalogStatus       JobStatus      @default(pending)
+  priceStatus         JobStatus      @default(pending)
+  
+  suggestedPriceRange Json?          // { min, max, currency }
+  price               Float?
+  
+  status              ProductStatus  @default(draft)
+  inputVersion        Int            @default(1)
+  
+  createdAt           DateTime       @default(now())
+  updatedAt           DateTime       @updatedAt
+  publishedAt         DateTime?
+
+  images              ProductImage[]
+  catalog             ProductCatalog?
+  inquiries           Inquiry[]
+}
+
+model ProductImage {
+  id                 String    @id @default(uuid())
+  productId          String
+  product            Product   @relation(fields: [productId], references: [id])
+  order              Int       @default(0)
+  
+  rawImageUrl        String
+  processedImageUrl  String?
+  thumbnailUrl       String?
+  
+  processingStatus   JobStatus @default(pending)
+  useRawImage        Boolean   @default(false)
+  processingMetadata Json?
+  qualityWarnings    Json?
+  
+  processedAt        DateTime?
+  sourceVersion      Int       @default(1)
+  
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+}
+
+model ProductCatalog {
+  id                 String    @id @default(uuid())
+  productId          String    @unique
+  product            Product   @relation(fields: [productId], references: [id])
+  
+  structuredFields   Json?     // extracted facts
+  finalDescription   String?
+  translations       ProductTranslation[]
+}
+
+model ProductTranslation {
+  id               String         @id @default(uuid())
+  catalogId        String
+  catalog          ProductCatalog @relation(fields: [catalogId], references: [id])
+  language         String
+  translatedText   String
+}
+
+enum InquiryStatus {
+  SUBMITTED
+  ACCEPTED
+  COMPLETED
+  DECLINED
+}
+
+model Inquiry {
+  id               String        @id @default(uuid())
+  productId        String
+  product          Product       @relation(fields: [productId], references: [id])
+  buyerId          String
+  buyer            BuyerProfile  @relation(fields: [buyerId], references: [id])
+  
+  quantity         Int?
+  requirements     String?
+  targetLocation   String?
+  message          String?
+  
+  status           InquiryStatus @default(SUBMITTED)
+  isViewed         Boolean       @default(false)
+  viewedAt         DateTime?
+  
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+}
+
+model Job {
+  id           String    @id @default(uuid())
+  type         String    // e.g., "IMAGE_PROCESS", "CATALOG_GEN"
+  status       JobStatus @default(pending)
+  payload      Json
+  result       Json?
+  errorMessage String?
+  attempts     Int       @default(0)
+  lockedAt     DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+}
+
