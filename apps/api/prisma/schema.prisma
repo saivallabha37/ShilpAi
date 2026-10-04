@@ -155,7 +155,41 @@ model Product {
 
   images              ProductImage[]
   catalog             ProductCatalog?
+  voiceRecordings     VoiceRecording[]
+  priceRecommendation PriceRecommendation?
   inquiries           Inquiry[]
+}
+
+model VoiceRecording {
+  id                String    @id @default(uuid())
+  productId         String
+  product           Product   @relation(fields: [productId], references: [id])
+  audioUrl          String
+  durationSeconds   Int?
+  languageDetected  String?
+  transcriptNative  String?
+  transcriptEnglish String?
+  status            JobStatus @default(pending)
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+}
+
+model PriceRecommendation {
+  id                  String   @id @default(uuid())
+  productId           String   @unique
+  product             Product  @relation(fields: [productId], references: [id])
+  materialCost        Float?
+  laborHours          Float?
+  hourlyRate          Float?
+  overheadAmount      Float?
+  calculatedBaseCost  Float?
+  suggestedMinPrice   Float
+  suggestedMaxPrice   Float
+  suggestedPointPrice Float?
+  explanation         String?
+  confidenceScore     Float?
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
 }
 
 model ProductImage {

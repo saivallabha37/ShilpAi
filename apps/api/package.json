@@ -8,29 +8,35 @@
     "dev": "nodemon src/index.ts",
     "build": "tsc",
     "db:push": "prisma db push",
-    "db:generate": "prisma generate"
+    "db:generate": "prisma generate",
+    "db:seed": "prisma db seed"
+  },
+  "prisma": {
+    "seed": "ts-node prisma/seed.ts"
   },
   "dependencies": {
-    "@shilpai/types": "*",
+    "@aws-sdk/client-s3": "^3.1146.0",
+    "@prisma/client": "^5.3.1",
     "@shilpai/shared": "*",
-    "express": "^4.18.2",
+    "@shilpai/types": "*",
+    "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
     "dotenv": "^16.3.1",
-    "@prisma/client": "^5.3.1",
+    "express": "^4.18.2",
     "jsonwebtoken": "^9.0.2",
-    "bcryptjs": "^2.4.3",
+    "multer": "^2.4.0",
     "zod": "^3.22.2"
   },
   "devDependencies": {
-    "@types/express": "^4.17.17",
-    "@types/cors": "^2.8.14",
-    "@types/jsonwebtoken": "^9.0.3",
     "@types/bcryptjs": "^2.4.4",
+    "@types/cors": "^2.8.14",
+    "@types/express": "^4.17.17",
+    "@types/jsonwebtoken": "^9.0.3",
+    "@types/multer": "^2.3.0",
     "@types/node": "^20.6.2",
-    "prisma": "^5.3.1",
-    "typescript": "^5.2.2",
     "nodemon": "^3.0.1",
-    "ts-node": "^10.9.1"
+    "prisma": "^5.3.1",
+    "ts-node": "^10.9.1",
+    "typescript": "^5.2.2"
   }
 }
-
